@@ -95,7 +95,8 @@ export default {
       goodsList: [],
       sortFlag: true,
       page: 1,
-      pageSize: 8
+      pageSize: 8,
+      busy: true
     };
   },
   mounted() {
