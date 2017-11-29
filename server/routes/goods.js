@@ -18,14 +18,24 @@ mongoose.connection.on("disconnected", function () {
   console.log("MongoDB connected disconnected.")
 });
 
+
 router.get("/", function (req, res, next) {
-  Goods.find({}, function (err, doc) {
+  //mong分頁方法
+  let page = parseInt(req.param("page"));
+  let pageSize = parseInt(req.param("pageSize"));
+  let sort = req.param("sort");
+  let skip = (page-1)*pageSize;
+  let params = {};
+  let goodsModel = Goods.find(params).skip(skip).limit(pageSize);
+  goodsModel.sort({'salePrice':sort});
+  
+
+  goodsModel.exec( function (err, doc) {
     if (err) {
       res.json({
         status: '1',
         msg: err.message
       });
-
     } else {
       res.json({
         status: '0',
@@ -37,7 +47,6 @@ router.get("/", function (req, res, next) {
       })
     }
   })
-
 });
 
 module.exports = router;
