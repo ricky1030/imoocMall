@@ -121,41 +121,39 @@
       NavBread: NavBread
     },
     methods: {
-      getGoodsList(flag) {
-        this.loading = true;
-        var param = {
-          page: this.page,
-          pageSize: this.pageSize,
-          sort: this.sortFlag ? 1 : -1,
-          priceLevel: this.priceChecked
+       getGoodsList(flag) {
+      var param = {
+        page: this.page,
+        pageSize: this.pageSize,
+        sort: this.sortFlag ? 1 : -1,
+        priceLevel: this.priceChecked
+      };
+      this.loading = true;
+      axios
+        .get("/goods/list", {
+          params: param
+        })
+        .then(response => {
+          var res = response.data;
+          this.loading = false;
+          if (res.status == "0") {
+            if (flag) {
+              this.goodsList = this.goodsList.concat(res.result.list);
 
-        };
-        axios
-          .get("/goods", {
-            params: param
-          })
-          .then(response => {
-            let res = response.data;
-            this.loading = false;
-
-            if (res.status == "0") {
-              if (flag) {
-                this.goodsList = this.goodsList.concat(res.result.list);
-
-                if (res.result.count == 0) {
-                  this.busy = true;
-                } else {
-                  this.busy = false;
-                }
+              if (res.result.count == 0) {
+                this.busy = true;
               } else {
-                this.goodsList = res.result.list;
                 this.busy = false;
               }
             } else {
-              this.goodsList = [];
+              this.goodsList = res.result.list;
+              this.busy = false;
             }
-          });
-      },
+          } else {
+            this.goodsList = [];
+          }
+        });
+    },
       sortGoods() {
         this.sortFlag = !this.sortFlag;
         this.page = 1;

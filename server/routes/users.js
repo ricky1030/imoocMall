@@ -45,6 +45,38 @@ router.post("/login", function(req, res, next) {
     });
 });
 
+//登出接口
+
+router.post('/logout', (req, res,next) => {
+    res.cookie("userId","",{
+        path:"/",
+        maxAge:-1
+      });
+      res.json({
+        status:"0",
+        msg:'',
+        result:''
+      })
+});
+
+router.get("/checkLogin", function (req,res,next) {
+    if(req.cookies.userId){
+        res.json({
+          status:'0',
+          msg:'',
+          result:req.cookies.userName || ''
+        });
+    }else{
+      res.json({
+        status:'1',
+        msg:'未登录',
+        result:''
+      });
+    }
+  });
+
+
+
 
 
 module.exports = router;
