@@ -4,7 +4,7 @@
       <div class="container">
         <nav class="nav-breadcrumb">
           <a href="/">Home</a>
-          <span>Goods</span>
+          <slot></slot>
         </nav>
       </div>
     </div>
