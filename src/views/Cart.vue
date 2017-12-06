@@ -55,7 +55,7 @@
               </ul>
             </div>
             <ul class="cart-item-list">
-              <li>
+              <li v-for="item in cartList">
                 <div class="cart-tab-1">
                   <div class="cart-item-check">
                     <a href="javascipt:;" class="checkbox-btn item-check-btn">
@@ -65,33 +65,33 @@
                     </a>
                   </div>
                   <div class="cart-item-pic">
-                    <img src="/static/1.jpg">
+                    <img :src="'/static/'+item.productImage" :alt="item.productName">
 
                   </div>
                   <div class="cart-item-title">
-                    <div class="item-name"></div>
+                    <div class="item-name">{{item.productName}}</div>
                   </div>
                 </div>
                 <div class="cart-tab-2">
-                  <div class="item-price"></div>
+                  <div class="item-price">{{item.salePrice}}</div>
                 </div>
                 <div class="cart-tab-3">
                   <div class="item-quantity">
                     <div class="select-self select-self-open">
                       <div class="select-self-area">
                         <a class="input-sub">-</a>
-                        <span class="select-ipt"></span>
+                        <span class="select-ipt">{{item.productNum}}</span>
                         <a class="input-add">+</a>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="cart-tab-4">
-                  <div class="item-price-total"></div>
+                  <div class="item-price-total">{{item.salePrice*item.productNum}}</div>
                 </div>
                 <div class="cart-tab-5">
                   <div class="cart-item-opration">
-                    <a href="javascript:;" class="item-edit-btn">
+                    <a href="javascript:;" class="item-edit-btn" @click="delCartConfirm(item.productId)">
                       <svg class="icon icon-del">
                         <use xlink:href="#icon-del"></use>
                       </svg>
@@ -129,6 +129,13 @@
         </div>
       </div>
     </div>
+  <Modal :mdShow="modalConfirm" @close="closeModal">
+      <p slot="message">你确认要删除此条数据吗?</p>
+      <div slot="btnGroup">
+        <a class="btn btn--m" href="javascript:;" @click="delCart">确认</a>
+        <a class="btn btn--m btn--red" href="javascript:;" @click="modalConfirm = false">关闭</a>
+      </div>
+    </Modal>
     <nav-footer></nav-footer>
 
 
@@ -136,52 +143,87 @@
 </template>
 
 <script>
-  import './../assets/css/checkout.css'
-  import NavHeader from "../components/Header";
-  import NavFooter from "../components/Footer.vue";
-  import NavBread from "../components/Bread.vue";
-  import Modal from "./../components/Modal";
-
-  export
-  default {
-
-    components: {
-      NavHeader: NavHeader,
-      NavFooter: NavFooter,
-      NavBread: NavBread,
-      Modal: Modal
-
+import "./../assets/css/checkout.css";
+import NavHeader from "../components/Header";
+import NavFooter from "../components/Footer.vue";
+import NavBread from "../components/Bread.vue";
+import Modal from "./../components/Modal";
+import axios from "axios";
+export default {
+  data() {
+    return {
+      cartList: [],
+      delItem: {},
+      productId: "",
+      modalConfirm: false
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  components: {
+    NavHeader: NavHeader,
+    NavFooter: NavFooter,
+    NavBread: NavBread,
+    Modal: Modal
+  },
+  methods: {
+    init() {
+      axios.get("/users/cartList").then(response => {
+        let res = response.data;
+        this.cartList = res.result;
+      });
+    },
+    closeModal() {
+      this.modalConfirm = false;
+    },
+    delCartConfirm(item) {
+      this.delItem = item;
+      this.modalConfirm = true;
+    },
+    delCart() {
+      axios
+        .post("/users/cartDel", {
+          productId: this.delItem.productId
+        })
+        .then(response => {
+          let res = response.data;
+          if (res.status == "0") {
+            this.modalConfirm = false;
+            // var delCount = this.delItem.productNum;
+            // this.$store.commit("updateCartCount", -delCount);
+            this.init();
+          }
+        });
     }
-
   }
-
+};
 </script>
 
 <style>
-  .input-sub,
-  .input-add {
-    min-width: 40px;
-    height: 100%;
-    border: 0;
-    color: #605F5F;
-    text-align: center;
-    font-size: 16px;
-    overflow: hidden;
-    display: inline-block;
-    background: #f0f0f0;
-  }
+.input-sub,
+.input-add {
+  min-width: 40px;
+  height: 100%;
+  border: 0;
+  color: #605f5f;
+  text-align: center;
+  font-size: 16px;
+  overflow: hidden;
+  display: inline-block;
+  background: #f0f0f0;
+}
 
-  .item-quantity .select-self-area {
-    background: none;
-    border: 1px solid #f0f0f0;
-  }
+.item-quantity .select-self-area {
+  background: none;
+  border: 1px solid #f0f0f0;
+}
 
-  .item-quantity .select-self-area .select-ipt {
-    display: inline-block;
-    padding: 0 3px;
-    width: 30px;
-    min-width: 30px;
-    text-align: center;
-  }
-
+.item-quantity .select-self-area .select-ipt {
+  display: inline-block;
+  padding: 0 3px;
+  width: 30px;
+  min-width: 30px;
+  text-align: center;
+}
 </style>
