@@ -2,9 +2,9 @@
   <div>
     <nav-header>
     </nav-header>
-<nav-bread>
-    <span>Cart</span>
-</nav-bread> 
+    <nav-bread>
+      <span>Cart</span>
+    </nav-bread>
 
 
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +58,7 @@
               <li v-for="item in cartList">
                 <div class="cart-tab-1">
                   <div class="cart-item-check">
-                    <a href="javascipt:;" class="checkbox-btn item-check-btn">
+                    <a href="javascipt:;" class="checkbox-btn item-check-btn" v-bind:class="{'check':item.checked=='1'}" @click="editCart('checked',item)">
                       <svg class="icon icon-ok">
                         <use xlink:href="#icon-ok"></use>
                       </svg>
@@ -79,9 +79,10 @@
                   <div class="item-quantity">
                     <div class="select-self select-self-open">
                       <div class="select-self-area">
-                        <a class="input-sub">-</a>
+                        <a class="input-sub" @click="editCart('minu',item)">-</a>
                         <span class="select-ipt">{{item.productNum}}</span>
-                        <a class="input-add">+</a>
+                        <a class="input-add" @click="editCart('add',item)">+</a>
+
                       </div>
                     </div>
                   </div>
@@ -129,7 +130,7 @@
         </div>
       </div>
     </div>
-  <Modal :mdShow="modalConfirm" @close="closeModal">
+    <Modal :mdShow="modalConfirm" @close="closeModal">
       <p slot="message">你确认要删除此条数据吗?</p>
       <div slot="btnGroup">
         <a class="btn btn--m" href="javascript:;" @click="delCart">确认</a>
@@ -143,87 +144,117 @@
 </template>
 
 <script>
-import "./../assets/css/checkout.css";
-import NavHeader from "../components/Header";
-import NavFooter from "../components/Footer.vue";
-import NavBread from "../components/Bread.vue";
-import Modal from "./../components/Modal";
-import axios from "axios";
-export default {
-  data() {
-    return {
-      cartList: [],
-      delItem: {},
-      productId: "",
-      modalConfirm: false
-    };
-  },
-  mounted() {
-    this.init();
-  },
-  components: {
-    NavHeader: NavHeader,
-    NavFooter: NavFooter,
-    NavBread: NavBread,
-    Modal: Modal
-  },
-  methods: {
-    init() {
-      axios.get("/users/cartList").then(response => {
-        let res = response.data;
-        this.cartList = res.result;
-      });
+  import "./../assets/css/checkout.css";
+  import NavHeader from "../components/Header";
+  import NavFooter from "../components/Footer.vue";
+  import NavBread from "../components/Bread.vue";
+  import Modal from "./../components/Modal";
+  import axios from "axios";
+  export default {
+    data() {
+      return {
+        cartList: [],
+        delItem: {},
+        productId: "",
+        modalConfirm: false
+      };
     },
-    closeModal() {
-      this.modalConfirm = false;
+    mounted() {
+      this.init();
     },
-    delCartConfirm(item) {
-      this.delItem = item;
-      this.modalConfirm = true;
+    components: {
+      NavHeader: NavHeader,
+      NavFooter: NavFooter,
+      NavBread: NavBread,
+      Modal: Modal
     },
-    delCart() {
-      axios
-        .post("/users/cartDel", {
-          productId: this.delItem.productId
-        })
-        .then(response => {
+    methods: {
+      init() {
+        axios.get("/users/cartList").then(response => {
           let res = response.data;
-          if (res.status == "0") {
-            this.modalConfirm = false;
-            // var delCount = this.delItem.productNum;
-            // this.$store.commit("updateCartCount", -delCount);
-            this.init();
-          }
+          this.cartList = res.result;
         });
+      },
+      closeModal() {
+        this.modalConfirm = false;
+      },
+      delCartConfirm(productId) {
+
+        // this.delItem = item;
+        this.productId = productId;
+        this.modalConfirm = true;
+      },
+      delCart() {
+        axios
+          .post("/users/cartDel", {
+            productId: this.productId
+          })
+          .then(response => {
+            let res = response.data;
+            if (res.status == "0") {
+              this.modalConfirm = false;
+              // var delCount = this.delItem.productNum;
+              // this.$store.commit("updateCartCount", -delCount);
+              this.init();
+            }
+          });
+      },
+      editCart(flag, item) {
+        if (flag == 'add') {
+          item.productNum++;
+        } else if (flag == 'minu') {
+          if (item.productNum <= 1) {
+            return;
+          }
+          item.productNum--;
+        } else {
+          item.checked = item.checked == "1" ? '0' : '1';
+        }
+        axios.post("/users/cartEdit", {
+          productId: item.productId,
+          productNum: item.productNum,
+          checked: item.checked
+        }).then((response) => {
+          let res = response.data;
+          // if (res.status == "0") {
+          //   this.$store.commit("updateCartCount", flag == "add" ? 1 : -1);
+          // }
+        })
+      }
+
+
+
+
     }
-  }
-};
+  };
+
 </script>
 
 <style>
-.input-sub,
-.input-add {
-  min-width: 40px;
-  height: 100%;
-  border: 0;
-  color: #605f5f;
-  text-align: center;
-  font-size: 16px;
-  overflow: hidden;
-  display: inline-block;
-  background: #f0f0f0;
-}
+  .input-sub,
+  .input-add {
+    min-width: 40px;
+    height: 100%;
+    border: 0;
+    color: #605f5f;
+    text-align: center;
+    font-size: 16px;
+    overflow: hidden;
+    display: inline-block;
+    background: #f0f0f0;
+  }
 
-.item-quantity .select-self-area {
-  background: none;
-  border: 1px solid #f0f0f0;
-}
+  .item-quantity .select-self-area {
+    background: none;
+    border: 1px solid #f0f0f0;
+  }
 
-.item-quantity .select-self-area .select-ipt {
-  display: inline-block;
-  padding: 0 3px;
-  width: 30px;
-  min-width: 30px;
-  text-align: center;
-}
+  .item-quantity .select-self-area .select-ipt {
+    display: inline-block;
+    padding: 0 3px;
+    width: 30px;
+    min-width: 30px;
+    text-align: center;
+  }
+
 </style>
