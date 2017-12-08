@@ -107,8 +107,8 @@
           <div class="cart-foot-inner">
             <div class="cart-foot-l">
               <div class="item-all-check">
-                <a href="javascipt:;">
-                  <span class="checkbox-btn item-check-btn">
+                <a href="javascipt:;" @click="toggleCheckAll" >
+                  <span class="checkbox-btn item-check-btn" :class="{'check':checkAllFlag}">
                     <svg class="icon icon-ok">
                       <use xlink:href="#icon-ok" />
                     </svg>
@@ -144,117 +144,119 @@
 </template>
 
 <script>
-  import "./../assets/css/checkout.css";
-  import NavHeader from "../components/Header";
-  import NavFooter from "../components/Footer.vue";
-  import NavBread from "../components/Bread.vue";
-  import Modal from "./../components/Modal";
-  import axios from "axios";
-  export default {
-    data() {
-      return {
-        cartList: [],
-        delItem: {},
-        productId: "",
-        modalConfirm: false
-      };
+import "./../assets/css/checkout.css";
+import NavHeader from "../components/Header";
+import NavFooter from "../components/Footer.vue";
+import NavBread from "../components/Bread.vue";
+import Modal from "./../components/Modal";
+import axios from "axios";
+export default {
+  data() {
+    return {
+      cartList: [],
+      delItem: {},
+      productId: "",
+      modalConfirm: false,
+      checkAllFlag: false
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  components: {
+    NavHeader: NavHeader,
+    NavFooter: NavFooter,
+    NavBread: NavBread,
+    Modal: Modal
+  },
+  methods: {
+    init() {
+      axios.get("/users/cartList").then(response => {
+        let res = response.data;
+        this.cartList = res.result;
+      });
     },
-    mounted() {
-      this.init();
+    closeModal() {
+      this.modalConfirm = false;
     },
-    components: {
-      NavHeader: NavHeader,
-      NavFooter: NavFooter,
-      NavBread: NavBread,
-      Modal: Modal
+    delCartConfirm(productId) {
+      // this.delItem = item;
+      this.productId = productId;
+      this.modalConfirm = true;
     },
-    methods: {
-      init() {
-        axios.get("/users/cartList").then(response => {
+    delCart() {
+      axios
+        .post("/users/cartDel", {
+          productId: this.productId
+        })
+        .then(response => {
           let res = response.data;
-          this.cartList = res.result;
-        });
-      },
-      closeModal() {
-        this.modalConfirm = false;
-      },
-      delCartConfirm(productId) {
-
-        // this.delItem = item;
-        this.productId = productId;
-        this.modalConfirm = true;
-      },
-      delCart() {
-        axios
-          .post("/users/cartDel", {
-            productId: this.productId
-          })
-          .then(response => {
-            let res = response.data;
-            if (res.status == "0") {
-              this.modalConfirm = false;
-              // var delCount = this.delItem.productNum;
-              // this.$store.commit("updateCartCount", -delCount);
-              this.init();
-            }
-          });
-      },
-      editCart(flag, item) {
-        if (flag == 'add') {
-          item.productNum++;
-        } else if (flag == 'minu') {
-          if (item.productNum <= 1) {
-            return;
+          if (res.status == "0") {
+            this.modalConfirm = false;
+            // var delCount = this.delItem.productNum;
+            // this.$store.commit("updateCartCount", -delCount);
+            this.init();
           }
-          item.productNum--;
-        } else {
-          item.checked = item.checked == "1" ? '0' : '1';
+        });
+    },
+    editCart(flag, item) {
+      if (flag == "add") {
+        item.productNum++;
+      } else if (flag == "minu") {
+        if (item.productNum <= 1) {
+          return;
         }
-        axios.post("/users/cartEdit", {
+        item.productNum--;
+      } else {
+        item.checked = item.checked == "1" ? "0" : "1";
+      }
+      axios
+        .post("/users/cartEdit", {
           productId: item.productId,
           productNum: item.productNum,
           checked: item.checked
-        }).then((response) => {
+        })
+        .then(response => {
           let res = response.data;
           // if (res.status == "0") {
           //   this.$store.commit("updateCartCount", flag == "add" ? 1 : -1);
           // }
-        })
-      }
-
-
-
-
+        });
+    },
+    toggleCheckAll() {
+     this.checkAllFlag=  !this.checkAllFlag;
+     this.cartList.forEach(element => {
+       element.checked=this.checkAllFlag;
+     });
     }
-  };
-
+  }
+};
 </script>
 
 <style>
-  .input-sub,
-  .input-add {
-    min-width: 40px;
-    height: 100%;
-    border: 0;
-    color: #605f5f;
-    text-align: center;
-    font-size: 16px;
-    overflow: hidden;
-    display: inline-block;
-    background: #f0f0f0;
-  }
+.input-sub,
+.input-add {
+  min-width: 40px;
+  height: 100%;
+  border: 0;
+  color: #605f5f;
+  text-align: center;
+  font-size: 16px;
+  overflow: hidden;
+  display: inline-block;
+  background: #f0f0f0;
+}
 
-  .item-quantity .select-self-area {
-    background: none;
-    border: 1px solid #f0f0f0;
-  }
+.item-quantity .select-self-area {
+  background: none;
+  border: 1px solid #f0f0f0;
+}
 
-  .item-quantity .select-self-area .select-ipt {
-    display: inline-block;
-    padding: 0 3px;
-    width: 30px;
-    min-width: 30px;
-    text-align: center;
-  }
-
+.item-quantity .select-self-area .select-ipt {
+  display: inline-block;
+  padding: 0 3px;
+  width: 30px;
+  min-width: 30px;
+  text-align: center;
+}
 </style>
